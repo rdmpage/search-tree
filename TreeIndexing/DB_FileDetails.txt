@@ -1,0 +1,219 @@
+========
+Tree%d.db
+========
+Contais tree data in binary from correspoding to the newick tree file
+<GenTreeId:unsigned int><StringTreeId:char[20]><NodeCount:unsigned short><GenNodeId1:unsigned int>...<GenNodeIdn>
+
+==============
+treeDirMap.db
+==============
+Contains information where each tree is stored
+Uniq tree ids are represented by numbers starting from 0 and TreeAddrInfos are stored in that order only hence no need to store the uniq tree ids
+<TreeAddrInfo:struct>
+struct TreeAddrInfo
+{
+unsigned short nodeCount;
+unsigned short fileId;
+unsigned int addr;
+};
+
+===============
+ClusterMap.db
+===============
+For second stage of query processing ,treeDirMap.db is now replaced by this.
+NOTE THAT whie treeDirMap.db is used in the first stage for storing the clusters as trees, ClusterMap.db stores information where the bootstrapped trees
+of the clusters are stored.
+Contains information where each cluster is stored
+Uniq cluster ids are represented by numbers starting from 0 and ClusterAddrInfo are stored in that order only hence no need to store the uniq tree ids
+First entry is the number of clusters contained in this file.
+<numOfClus:unsinged int>
+<ClusterAddrInfo:class>
+class ClusterAddrInfo
+{
+public:
+unsigned short taxaCount;
+unsigned short fileId;
+unsigned int addr;
+};
+
+===============
+treeStrIdMap.db
+===============
+Contains mapping of GenTreeId-StrTreeId. 
+Uniq tree ids are represented by numbers starting from 0 and strTreeIds are stored in that order only hence no need to store the uniq tree ids
+<numTrees:unsinged int>
+<StrTreeId:char[20]>
+
+====================
+querySeqFreqArr_G.db
+====================
+Contains frequencies of genSeqIds at the global level. i.e. num of trees each of the seqId is contained in
+<numOFSeqIds:unsigned int>
+<querySeq_1_Freq:unsigned int>...<querySeq_n_Freq:unsigned int>
+
+================
+genSeqOrgIdArr.db
+================
+Contains GenSeqId to OrgSeqId mapping in a kind of tabular form
+SeqIdn'th means that GenSeqId=n is mapped to SeqIdn
+<#ofEntries:unsigned int>
+<SeqIdn1:unsigned int>....<SeqIdn>
+
+=====================
+genTaxaOrgIdArr.db
+=====================
+Contains mapping from sequientially generated unique query taxa ids to quey taxa ids in an array form.Since generated taxa ids
+are sequeqntial, hence only the query taxa ids are stored.
+<#ofEntries:unsigned int>
+<QueryTaxaId1:unsigned int>...<QueryTaxaIdn>
+
+SeqIdUniqQueryTaxaArr.db changed to genSeqGenTaxaArr.db
+
+=====================
+genSeqGenTaxaArr.db
+=====================
+Contains mapping from sequientially generated unique sequence ids to the corresponding generated unique query taxa ids in an array form.
+Since generated sequence ids are sequeqntial, hence only the generated query taxa ids are stored. Its obvious that a generated query taxaId
+may appear more than once in the file.
+<#ofEntries:unsigned int>
+<QueryTaxaId1:unsigned int>...<QueryTaxaIdn>
+
+===============
+queryTaxaDir.db
+===============
+Contains mapping of a query taxa Id to its position in queryTaxaId-sequence mapping file buf.
+nth entry = pos of nth taxa in the buf, only the pos is stored
+<TaxaId1_Pos:ussigned int>...<TaxaIdn_Pos:ussigned int>
+
+===============
+queryTaxaMap.db
+===============
+Query taxa-sequence id mapping file
+Sequence Ids here are uniquely generated sequence ids
+<SizeOfBuffer:unsigned int>
+<#ofSequenceIds:unsigned int><SeqId1:unsigned int>...<SeqIdn>
+...
+
+=============
+strTaxaMap.db
+=============
+This contains mapping string type query taxa to corresponding numerical query taxa. Each strTaxaId can map to multiple queryTaxaId
+It contains list of records for each strQueryTaxa.
+<SizeOfCharBuf:size_t>//space required to store all of str taxa, needed for efficiently allocating mem to string hash class
+<SizeOfMapBuf:unsigned int>//sum of numbers of all query taxa, each strQueryTaxa is mapped to
+<#ofStrTaxaIds:unsigned int>
+<!-- strTaxa1 record start-->
+<strTaxaStrLen:unsigned char>
+<strTaxaId:char*strTaxaStrLen>
+<taxaIdCount:unsigned char>//# of taxaIds this strTaxaId maps to
+<orgTaxaId1:unsigned int><gebTaxaId1:unsigned int>...<orgTaxaIdn><gebTaxaIdn>//both orgTaxaId and genTaxaId are stored for convenience
+<!-- strTaxa1 record end-->
+...
+
+========
+vocab.db
+========
+Vocab for all taxas (both being used in some tree and ones only present in taxaid-seq id mapping file)
+Contains index in invListBuf for each taxaId
+<SizeOfVocab:unsigned int>
+<TaxaId1Index:unsigned int>....<TaxaIdnIndex>
+
+============
+invList%d.db
+============
+Contains InvList information.
+Two files invList1.db and invList2.db contain invList information in half each.
+invList1.db:
+<SizeOfInvList:unsigned int>//this is total size of invList i.e. invList1.db+ invList2.db
+<#ofTrees:unsigned int><TreeId1:unsigned int>...<TreeIdn>
+invList2.db:
+<#ofTrees:unsigned int><TreeId1:unsigned int>...<TreeIdn>
+
+
+What has changed on Nov 12, 2010
+queryTaxaDir.db
+Now it contains mapping like: nth entry = pos of nth taxa in the buf
+Hence entries would be like
+<numOfTaxId:unsigned int>
+<TaxaId1_Pos,...> i.e. only the positions
+
+TaxaIdMap.db removed
+TaxaUniqIdArr.db changed to genSeqOrgIdArr.db
+Now nth entry contains seqId to which the nth uniqSeqId is mapped too
+
+TaxaFreqMap%d.db removed
+
+TaxaFreqMap_G.db 
+Now it contains:
+<NumOfTaxa:unsigned int>
+<OrgTaxaId1:unsigned int,frequency:unsigned int>...<OrgTaxaIdn:unsigned int,frequency:unsigned int>
+
+SeqIdUniqQueryTaxaArr.db changed to genSeqGenTaxaArr.db
+
+TaxaFreqMap_G.db: now it contains
+name changed to querySeqFreqArr_G.db
+<numOFTaxa:unsigned int>
+entries are store in terms of genSeqIds
+<querySeq_1_Freq:unsigned int>...<querySeq_n_Freq:unsigned int>
+
+TODO IN CODE
+-remove change alternative PD
+
+Files to be copied from TreeIndexing\files to Test1\files after init
+genSeqGenTaxaArr.db genSeqOrgIdArr.db genTaxaOrgIdArr.db treeStrIdMap.db clusTaxaCount.db strTaxaMap.db
+
+Command line option
+java -Djava.library.path="." stServer.UI_Server 8906
+ java -Djava.library.path="." stServer.ST_JAVA_CGI -f ./query/large_query -k 3 -q T -t TreeFile1 -z TS -s TableFile1 -u
+-f ./query/MikeQuery1 -k 3 -q T -t TreeFile1 -z TS -s TableFile1 -u -o T
+-f ./query/MikeCombined -k 3 -q T -t TreeFile1 -z TS -s TableFile1 -u -o T
+-f ./query/queryTaxaList -k 3 -q T -t TreeFile1 -z TS -s TableFile1 -u -o T
+-f ./query/large_query -k 3 -q T -t TreeFile1 -z TS -s TableFile1 -u
+-f ./query/queySeqList -k 3 -q S -t TreeFile1 -z TS -s TableFile1 -u -o S
+-L 63095138 63095106 63095105 63095104 63095107 -k 3 -q S -t TreeFile1 -z TS -s TableFile1 -u
+-L 123456789 123456788 63095105 63095104 63095107 -k 3 -q S -t TreeFile1 -z TS -s TableFile1 -u
+-L 2708 55188 408488 37334 -k 3 -q T -t TreeFile1 -z TS -s TableFile1
+-k 3 -q T -t TreeFile1 -z T -s TableFile1
+-k 3 -q S -t TreeFile1 -z S -s TableFile1
+-L 63095138 63095106 63095105 63095104 63095107 -k 3 -q S -u
+Sequence id based query
+63095138
+63095106
+63095105
+63095104
+63095107
+-1
+
+
+QueryRun:
+2708
+79217
+2785
+31452
+35689
+177373
+2981
+3040
+33095
+3225
+3267
+3341
+99811
+99811
+46969
+46970
+3352
+3507
+4113
+3818
+42032
+3636
+120023
+77070
+75703
+3691
+295327
+179740
+-1
+
+
